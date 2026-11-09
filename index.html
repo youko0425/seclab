@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SECURITY BASICS | Challenge</title>
+<style>
+:root{--bg:#05080c;--panel:#0a1119;--line:#1fb6d9;--dim:#0f6f86;--ink:#cfe9f2;--mute:#6f97a6;--ok:#3ee07f;--bad:#ff6b6b;--glow:0 0 8px rgba(31,182,217,.45)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-monospace,"JetBrains Mono",Consolas,"Noto Sans TC",monospace;font-size:14px;line-height:1.6;
+ background-image:linear-gradient(rgba(31,182,217,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(31,182,217,.05) 1px,transparent 1px);background-size:32px 32px}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 28px}
+.logo{font-weight:700;color:var(--line);letter-spacing:2px;text-shadow:var(--glow)}
+nav{display:flex;gap:8px;flex-wrap:wrap}
+nav button{background:transparent;border:1px solid var(--line);color:var(--line);padding:6px 12px;font:inherit;font-size:12px;letter-spacing:1px;cursor:pointer;font-weight:700}
+nav button.on{background:rgba(31,182,217,.15);box-shadow:var(--glow)}
+main{max-width:1400px;margin:0 auto;padding:10px 28px 80px}
+.page{display:none}.page.on{display:block}
+h1{font-size:26px;color:var(--line);text-shadow:var(--glow);letter-spacing:2px;margin:10px 0 2px}
+.sub{color:var(--mute);margin:0 0 20px}
+.home-steps{list-style:none;padding:0;margin:0 0 24px}
+.home-steps li{margin:6px 0}.home-steps li::before{content:"\25C7  ";color:var(--line)}
+.home{max-width:760px;margin:0 auto}.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.mission{border:1px solid var(--line);padding:22px 18px 16px;position:relative;cursor:pointer;background:var(--panel)}
+.mission:hover{box-shadow:var(--glow)}
+.tag{position:absolute;top:-9px;left:12px;background:var(--bg);padding:0 6px;font-size:10px;color:var(--line);letter-spacing:1px}
+.mission b{color:var(--line);display:block;margin-bottom:4px}
+.mission .p{color:var(--mute);font-size:12px;margin-top:8px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+@media(max-width:1000px){.split{grid-template-columns:1fr}.dock{position:static!important}}
+.task{border:1px solid var(--line);background:var(--panel);padding:20px 16px 14px;margin-bottom:18px;position:relative}
+.task.done{border-color:var(--ok)}.task.done .tag{color:var(--ok)}
+.task.locked{opacity:.35;pointer-events:none}
+.task .q{color:var(--line);margin-bottom:10px}.task .q::before{content:"> "}
+.task.done .q{color:var(--ok)}
+.row{display:flex;gap:8px}
+.row input{flex:1;background:#060b10;border:1px solid var(--dim);color:var(--ink);padding:8px 10px;font:inherit;outline:none}
+.row input:focus{border-color:var(--line)}
+.row button,.hint{background:transparent;border:1px solid var(--line);color:var(--line);font:inherit;font-weight:700;padding:6px 14px;cursor:pointer;font-size:12px;letter-spacing:1px}
+.hint{margin-top:10px;font-size:11px;padding:3px 10px}
+.hints div{color:#e8c66a;margin-top:6px;font-size:13px}
+.msg:empty{display:none}.msg{margin-top:12px;padding:8px 12px;font-size:13px;font-weight:700}.msg.good{border:1px dashed var(--ok);color:var(--ok);background:rgba(62,224,127,.08)}.msg.err{border:1px dashed var(--bad);color:var(--bad);background:rgba(255,107,107,.08)}.row button.ok{border-color:var(--ok);color:var(--ok);background:rgba(62,224,127,.1);box-shadow:0 0 8px rgba(62,224,127,.4)}.row input:disabled{color:var(--mute)}.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:9}.modal.on{display:flex}.mbox{border:1px solid var(--line);background:var(--panel);box-shadow:var(--glow);width:min(460px,90vw);padding:16px 20px 20px;position:relative}.mbox .t{font-size:11px;letter-spacing:2px;color:var(--line);margin-bottom:12px}.mbox .x{position:absolute;right:10px;top:10px;background:transparent;border:1px solid var(--line);color:var(--line);cursor:pointer;font:inherit;padding:0 7px}.mbox .hl div{color:#e8c66a;margin:6px 0;white-space:pre-line}.mbox .hl code{display:inline-block;background:#03060a;border:1px solid var(--dim);color:var(--ink);padding:2px 8px;margin:3px 0;font-size:13px}.mbox .more{margin-top:12px}
+.dock{position:sticky;top:12px}
+.termwrap{border:1px solid var(--line);background:#03060a;box-shadow:var(--glow)}
+.termbar{display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--dim);font-size:11px;color:var(--mute);letter-spacing:1px}
+.term{height:62vh;overflow:auto;padding:10px 12px;white-space:pre-wrap;word-break:break-all;font-size:13px}
+.term .p{color:var(--ok)}.term .e{color:var(--bad)}.term .g{color:var(--line)}.term .f{color:#ffd54a;font-weight:700}
+.cmdin{width:100%;border:0;border-top:1px solid var(--dim);background:#060b10;color:#fff;padding:10px 12px;font:inherit;outline:none}
+.status{position:fixed;right:24px;bottom:24px;border:1px dashed var(--line);background:var(--panel);padding:10px 16px;text-align:center;font-size:11px;letter-spacing:1px;color:var(--mute);min-width:170px}
+.status b{display:block;color:var(--ink);font-size:13px;margin:4px 0}
+.bar{height:4px;background:#0c2530;margin-top:6px}.bar i{display:block;height:100%;background:var(--line);width:0;transition:width .3s}
+.reset{position:fixed;left:24px;bottom:24px;background:transparent;border:1px solid var(--dim);color:var(--mute);font:inherit;font-size:11px;padding:5px 10px;cursor:pointer;letter-spacing:1px}
+.rst{display:block;margin:28px auto 0;background:transparent;border:1px dashed var(--bad);color:var(--bad);font:inherit;font-weight:700;letter-spacing:1px;padding:10px 22px;cursor:pointer}.rst.arm{background:rgba(255,107,107,.12)}.done-banner{display:none;border:1px solid var(--ok);color:var(--ok);padding:14px;text-align:center;margin-bottom:18px;letter-spacing:1px}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">SECURITY BASICS</div>
+<nav>
+<button data-p="home" class="on">HOME</button>
+<button data-p="pw">PASSWORDS</button>
+<button data-p="perm">PERMISSIONS</button>
+<button data-p="int">INTEGRITY</button>
+</nav>
+</header>
+<main>
+<div class="page on home" id="p-home">
+<h1>// SECURITY BASICS</h1>
+<p class="sub">密碼、權限、完整性三個任務。資料皆為虛構，終端機是瀏覽器內的模擬環境，雜湊為真實計算。</p>
+<ul class="home-steps">
+<li>每個任務左邊是題目，右邊是終端機。答案要在終端機裡自己找出來。</li>
+<li>卡住可以按 HINT，提示會一層一層給，越後面越直接。</li>
+<li>部分題目要完成特定操作，終端機才會吐出 FLAG{...}。</li>
+<li>進度存在這個瀏覽器裡，重新整理不會消失。</li>
+</ul>
+<div class="grid">
+<div class="mission" data-go="pw"><span class="tag">MISSION 01</span><b>&gt; Passwords</b>你的密碼真的安全嗎？<div class="p" id="hp-pw"></div></div>
+<div class="mission" data-go="perm"><span class="tag">MISSION 02</span><b>&gt; Permissions</b>誰都可以改成績？<div class="p" id="hp-perm"></div></div>
+<div class="mission" data-go="int"><span class="tag">MISSION 03</span><b>&gt; Integrity</b>公告被偷改了，你看得出來嗎？<div class="p" id="hp-int"></div></div>
+</div>
+</div>
+
+<div class="page" id="p-pw"><h1>// PASSWORDS CHALLENGE</h1><p class="sub">雜湊、salt 與字典攻擊。目標：破解弱密碼，並理解慢雜湊的意義。</p>
+<div class="split"><div><div class="done-banner">MISSION COMPLETE</div><div id="q-pw"></div><button class="rst" data-r="pw">[R] 重置本任務，重新練習</button></div><div class="dock"><div class="termwrap"><div class="termbar"><span>student@lab</span><span>/passwords</span></div><div class="term" id="t1"></div><input class="cmdin" id="i1" placeholder="$ 輸入指令，上下鍵叫回歷史" autocomplete="off" spellcheck="false"></div></div></div></div>
+
+<div class="page" id="p-perm"><h1>// PERMISSIONS CHALLENGE</h1><p class="sub">檔案擁有者與權限位元。目標：理解為什麼成績檔不能開放所有人寫入。</p>
+<div class="split"><div><div class="done-banner">MISSION COMPLETE</div><div id="q-perm"></div><button class="rst" data-r="perm">[R] 重置本任務，重新練習</button></div><div class="dock"><div class="termwrap"><div class="termbar"><span>multi-user lab</span><span>/permissions</span></div><div class="term" id="t2"></div><input class="cmdin" id="i2" placeholder="$ 輸入指令" autocomplete="off" spellcheck="false"></div></div></div></div>
+
+<div class="page" id="p-int"><h1>// INTEGRITY CHALLENGE</h1><p class="sub">SHA-256 與檔案驗證。目標：抓出被竄改的公告，並思考雜湊清單的弱點。</p>
+<div class="split"><div><div class="done-banner">MISSION COMPLETE</div><div id="q-int"></div><button class="rst" data-r="int">[R] 重置本任務，重新練習</button></div><div class="dock"><div class="termwrap"><div class="termbar"><span>student@lab</span><span>/integrity</span></div><div class="term" id="t3"></div><input class="cmdin" id="i3" placeholder="$ 輸入指令" autocomplete="off" spellcheck="false"></div></div></div></div>
+</main>
+<div class="modal" id="modal"><div class="mbox"><button class="x" id="mx">×</button><div class="t">HINT</div><div class="hl" id="hl"></div><button class="hint more" id="hmore"></button></div></div>
+
+<div class="status" id="status" style="display:none">MISSION STATUS<b id="st-n">0 / 0 已完成</b><div class="bar"><i id="st-bar"></i></div></div>
+<button class="reset" id="mreset" style="display:none">[R] MISSION RESET</button>
+
+<script>
+const TASKS={"pw": [{"q": "什麼指令可以顯示當前所在的目錄？", "m": "***", "a": ["a1159e9df3670d549d04524532629f5477ceb7deec9b45e47e8c009506ecb2c8"], "h": ["print working directory 的縮寫。"]}, {"q": "當前目錄在哪裡？", "m": "/***/***", "a": ["00a3453e0b7a6a8250ce9856a3b0378151f97d95bdb144040675a1bef8f2d06c"], "h": ["在右邊終端機輸入 pwd。"]}, {"q": "什麼指令可以查看當前目錄有哪些檔案？", "m": "**", "a": ["c7b68ac37f364473e922936708e7f43c293dd07b295171566c07ff5fe024fab9"], "h": ["list 的縮寫，兩個字母。"]}, {"q": "什麼指令可以切換目錄？", "m": "**", "a": ["21e721c35a5823fdb452fa2f9f0a612c74fb952e06927489c6b27a43b817bed4"], "h": ["change directory 的縮寫。", "輸入 cd passwords 就能進去，進去後再用 ls 看看有哪些檔案。"]}, {"q": "什麼指令可以查看檔案內容？", "m": "***", "a": ["77af778b51abd4a3c51c5ddd97204a9c3ae614ebccb75a606c3b6865aed6744e"], "h": ["三個字母，跟一種動物同名。"]}, {"q": "passwords 目錄中有一個 flag1.txt，提交檔案裡的 flag。", "m": "FLAG{*******_**_***_********}", "a": ["73fe9ee0489340760838a19d20260f8700c5e01dd6207e40d9410d4ba51e337d"], "h": ["先 cd passwords，再用 cat 查看。"]}, {"q": "passwords.hash 每行格式是「帳號:隨機字串:雜湊值」。中間那串隨機字串叫什麼？", "m": "****", "a": ["63479ad69a090b258277ec8fba6f99419a2ffb248981510657c944ccd1148e97"], "h": ["它的作用是讓相同密碼算出不同雜湊。", "中文常譯為「鹽」。"]}, {"q": "用 mkhash <salt> <密碼>，以 demo01、demo02 的 salt 各算一次 123456。結果一樣嗎？(一樣／不一樣)", "m": "***", "a": ["623e89d63409507afa6fc068bdd7c318d57ac53a24f9ff191f6bb6cdef92cc0b", "f2632a784b0d7c930186ef00d9b6804e91a826a75a974fc0ca9bef5ef09745f9", "9390298f3fb0c5b160498935d79cb139aef28e1c47358b4bbba61862b9c26e59", "0c70665b6eb65f1aebf3b59f684ce52ed3473b2443ed4b4e0b815e2e9d66b8c2", "11a4ff234f5a60313d98a577e4d81112538d7040d0049b2809ce0ce6f697a790"], "h": ["salt 是 passwords.hash 每一行的第二段。", "依序執行這兩行，比較輸出：\n`mkhash 7ba644de0306f9f2 123456`\n`mkhash 667c3448ce7b8f66 123456`"]}, {"q": "wordlist.txt 前 5 行是常見密碼。用 mkhash 搭配 demo01 的 salt 逐一測試，demo01 的密碼是什麼？", "m": "**********", "a": ["1fa7043e4841a6aa2915f88ae6aa422785a198ba85859b21fb9efb5417c23df9"], "h": ["用 head 只看前 5 行：\n`head -n 5 wordlist.txt`", "一行測一個，出現 [MATCH] 就是答案：\n`mkhash 7ba644de0306f9f2 123456`\n`mkhash 7ba644de0306f9f2 password`"]}, {"q": "用 john 跑字典攻擊，demo02 的密碼是什麼？", "m": "************", "a": ["bdeeec49cc011a889c1f5a1d0a05691ade1480fcaa0f94aae4f1bcfbcc2010fe"], "h": ["john 需要指定字典檔和雜湊檔。", "john --wordlist=wordlist.txt passwords.hash"]}, {"q": "還有幾個帳號沒被破解？", "m": "*", "a": ["6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"], "h": ["john --show passwords.hash"]}, {"q": "demo03 破不了，因為它的密碼不在哪個檔案裡？", "m": "********.***", "a": ["71a9f408162020e228534811cda2a81686f262cfb673324f7c106a3531b67cef"], "h": ["本任務的字典檔叫什麼名字？用 ls 看看。"]}, {"q": "執行 hashbench 比較一般雜湊和慢雜湊的速度，提交跑完後出現的 flag。", "m": "FLAG{****_****_****}", "a": ["dfd951d313016c087d53a0eb1a6776dab9b1ae9ce5558f6502fda8715afac8a5"], "h": ["在終端機輸入 hashbench 按 Enter，等幾秒，最後一行黃色的就是 flag。"]}], "perm": [{"q": "什麼指令可以列出檔案的權限與擁有者？", "m": "** -*", "a": ["f0f40cf78dab06e0d336e5ced925157780fdb4a376f454d6cc80f3d21bf10769"], "h": ["ls 再加上一個參數。", "ls -l"]}, {"q": "什麼指令可以顯示當前使用者？", "m": "******", "a": ["f25297859cf0a70af5c053a5464a5fa647a35ceee1d91397331903846d79ffc1"], "h": ["英文直譯就是「我是誰」。"]}, {"q": "當前 user 是誰？", "m": "******_***_*****", "a": ["0d7cce452e573ae45cb3e23d21af038e3665647a7dff18e3b0a953f5f373d4ab"], "h": ["在終端機輸入 whoami。"]}, {"q": "grades.csv 的擁有者是誰？", "m": "******_***_*****", "a": ["1dd49e22d53fc81e583d9c85e2a4d019f08b5808ce0ed19876fff6cc32ee389a"], "h": ["ls -l 的第三欄。"]}, {"q": "grades.csv 的權限 rw-r--r-- 換成數字是多少？", "m": "***", "a": ["87e50b28705900bb064d1e9df1bd6cf55a7efa01cc16c6cf0703f491a1f13d44"], "h": ["三個一組：擁有者、群組、其他人。r=4、w=2、x=1。", "rw- 是 4+2+0，r-- 是 4+0+0。"]}, {"q": "用 guest 執行 echo \"DemoStudent01,100\" >> grades.csv，錯誤訊息是什麼？", "m": "********** ******", "a": ["b77f13ea8d89b1be38c219acdb71af52a13e7030789a67c22a834c02c30bd39c"], "h": ["先 cd permissions，再把指令貼到終端機。"]}, {"q": "什麼指令可以切換使用者？", "m": "**", "a": ["0a64ce10853f25cb3dc3f7d498f62d72b406be37ba8caf5aa7671414d9696049"], "h": ["switch user 的縮寫。", "su elaine_lab_owner"]}, {"q": "什麼指令可以修改檔案權限？", "m": "*****", "a": ["e0fee4c9a9eddde0ab0cc34cca18bb298b47e042d3654f3abc2385ca39becbc9"], "h": ["change mode 的縮寫。", "用法是 chmod 三位數字 檔名，例如 chmod 644 grades.csv。"]}, {"q": "把 grades.csv 改成 666，再用 guest 竄改成績，提交 flag。", "m": "FLAG{*****_********_**_***}", "a": ["c9cc13b5b0c602ac904433ff25917c8e3893719463dd1315452753c924ceef50"], "h": ["依序執行 su elaine_lab_owner、chmod 666 grades.csv、su elaine_lab_guest。", "最後再執行一次 echo \"DemoStudent01,100\" >> grades.csv。"]}, {"q": "把 grades.csv 改成 600，再用 guest 讀取，提交 flag。", "m": "FLAG{*****_*********}", "a": ["d83e6224bc301f25335532abb55ecbb617ec3ff9ceb738249e131fb38eb04be7"], "h": ["先切回 owner 才能改權限。", "su elaine_lab_owner、chmod 600 grades.csv、su elaine_lab_guest，最後 cat grades.csv。"]}], "int": [{"q": "notice.txt 的截止時間是什麼？", "m": "****** **:**", "a": ["fdae68b3b5232f25f5e2e7e502af6dabed5d28177d67ec7295d48dfb0253180e"], "h": ["先 cd integrity。", "cat notice.txt"]}, {"q": "什麼指令可以計算檔案的 SHA-256？", "m": "*********", "a": ["0feef98ed807f72fe287f71ed82369c76d1d81825b8c0131dc21c41260b82d8d"], "h": ["演算法名稱 sha256 加上 sum。"]}, {"q": "notice.txt 的 SHA-256 前 8 碼是什麼？", "m": "********", "a": ["c8332ce8979c4835d1af7a7755a0a14f96050df2d24ddda14aabeb2eb92d5beb"], "h": ["sha256sum notice.txt"]}, {"q": "SHA256SUMS 記錄的是哪個檔案的雜湊？", "m": "******.***", "a": ["f003416596dcafa9f4a0221d5cf2a2cb6b2e285978f865c8b9dd1352a4ed436a"], "h": ["cat SHA256SUMS，雜湊後面接的就是檔名。"]}, {"q": "什麼指令可以比對兩個檔案的差異？", "m": "****", "a": ["df087996d45b03e7eb8c133c0298fd98d35113fca26aaba58612fef3cc212cad"], "h": ["difference 的縮寫。"]}, {"q": "notice_changed.txt 的截止時間被改成什麼？", "m": "******** **:**", "a": ["4a96dfda39b0f7bd16c1c73f791e463580007ca0c2ecfe20324aca554bca7277"], "h": ["diff notice.txt notice_changed.txt"]}, {"q": "複製 notice.txt 為 test.txt，把 17:00 改成 17:01。test.txt 的 SHA-256 前 8 碼是什麼？", "m": "********", "a": ["7a62eb69ba0d68cf5c3d9eff8b7c2041802cfc2f1e444aab87e6b712d7565aa6"], "h": ["cp 複製，sed -i 取代文字。", "cp notice.txt test.txt，sed -i 's/17:00/17:01/' test.txt，sha256sum test.txt"]}, {"q": "竄改 notice.txt，並讓 sha256sum -c SHA256SUMS 仍顯示 OK，提交 flag。", "m": "FLAG{*******_***_********}", "a": ["92c631852d0be5266c02befd1df92bcbe749e8016ba9ae3b263893ead1c4d332"], "h": ["只改 notice.txt，驗證會失敗。清單也要一起換掉。", "sed -i 's/Friday 17:00/Thursday 12:00/' notice.txt，再 sha256sum notice.txt > SHA256SUMS，最後 sha256sum -c SHA256SUMS。"]}, {"q": "要防止雜湊清單被替換，發布者該對清單加上什麼？(四個字)", "m": "****", "a": ["9b54c6297f0244b88212a44c121d55ce0aadde3950c0542f1d5537438e1fe4df", "645c0707e75a6a3ec1407b0685bec577a51d3f070624505b031d33420840b0f9", "07b8f90f13463764a359a1316b0c35528fb110ba594792407e81b1acec7feec1", "1a2fc26dc7ea5a2a4748b7cb2b1ef193d96ab2c99f93092f69e63075b28d1278", "6858a423dc9e04f67929d2c0bdf95e246efa280e0551e3152db2ec9d274e378a", "72f5c61fe7db11a68200aa17848338e50a54f56cf41f6ecbd910bea1575a5fb9"], "h": ["用私鑰處理清單，其他人用公鑰驗證。"]}]};
+const enc=new TextEncoder();
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+const sha=async s=>hex(await crypto.subtle.digest('SHA-256',enc.encode(s)));
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const rwx=d=>['---','--x','-w-','-wx','r--','r-x','rw-','rwx'][d];
+const norm=s=>s.trim().toLowerCase().replace(/\s+/g,' ');
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(_){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
+let cur='home';
+const prog={};for(const k in TASKS)prog[k]=store.get('sb_'+k)||{solved:[],hints:{}};
+
+function show(p){cur=p;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));
+  const lab=p!=='home';document.getElementById('status').style.display=lab?'':'none';document.getElementById('mreset').style.display=lab?'':'none';
+  refresh();if(lab)setTimeout(()=>document.getElementById({pw:'i1',perm:'i2',int:'i3'}[p]).focus(),0)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.p));
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));
+
+let mk=null,mi=0;
+function openHint(k,i){mk=k;mi=i;const P=prog[k];if(!P.hints[i]){P.hints[i]=1;store.set('sb_'+k,P)}drawHint();document.getElementById('modal').classList.add('on')}
+function drawHint(){const t=TASKS[mk][mi],n=prog[mk].hints[mi];
+  document.getElementById('hl').innerHTML=t.h.slice(0,n).map((h,j)=>`<div>${t.h.length>1?`[${j+1}] `:''}${esc(h).replace(/`([^`]+)`/g,'<code>$1</code>')}</div>`).join('');
+  const b=document.getElementById('hmore');b.style.display=n<t.h.length?'':'none';b.textContent=`下一個提示 (${n+1}/${t.h.length})`}
+document.getElementById('hmore').onclick=()=>{prog[mk].hints[mi]++;store.set('sb_'+mk,prog[mk]);drawHint()};
+const closeM=()=>document.getElementById('modal').classList.remove('on');
+document.getElementById('mx').onclick=closeM;document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeM()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM()});
+function renderTasks(k){
+  const box=document.getElementById('q-'+k),P=prog[k];P.ans=P.ans||{};box.innerHTML='';
+  TASKS[k].forEach((t,i)=>{
+    const solved=P.solved.includes(i);
+    const d=document.createElement('div');d.className='task';
+    d.innerHTML=`<span class="tag">TASK ${String(i+1).padStart(2,'0')}</span><div class="q">${esc(t.q)}</div>
+      <div class="row"><input placeholder="${esc(t.m)}" spellcheck="false" ${solved?'disabled':''}><button class="${solved?'ok':''}">${solved?'CORRECT':'SUBMIT'}</button></div>
+      <div class="msg ${solved?'good':''}">${solved?'[✓] Validation Confirmed':''}</div>
+      ${t.h.length?'<button class="hint">[?] HINT</button>':''}`;
+    const inp=d.querySelector('input'),msg=d.querySelector('.msg'),btn=d.querySelector('.row button');
+    if(solved)inp.value=P.ans[i]||'';
+    const submit=async()=>{if(P.solved.includes(i))return;const v=inp.value;if(!v.trim())return;
+      if(t.a.includes(await sha(norm(v)))){P.solved.push(i);P.ans[i]=v.trim();store.set('sb_'+k,P);
+        inp.disabled=true;btn.className='ok';btn.textContent='CORRECT';msg.className='msg good';msg.textContent='[✓] Validation Confirmed';
+        box.parentNode.querySelector('.done-banner').style.display=P.solved.length===TASKS[k].length?'block':'none';refresh()}
+      else{msg.className='msg err';msg.textContent='[✗] Access Denied，再試一次';inp.select()}};
+    btn.onclick=submit;inp.onkeydown=e=>{if(e.key==='Enter')submit()};
+    const hb=d.querySelector('.hint');if(hb)hb.onclick=()=>openHint(k,i);
+    box.appendChild(d)});
+  box.parentNode.querySelector('.done-banner').style.display=P.solved.length===TASKS[k].length?'block':'none';
+}
+function refresh(){
+  for(const k in TASKS)document.getElementById('hp-'+k).textContent=`${prog[k].solved.length} / ${TASKS[k].length} 已完成`;
+  if(cur==='home')return;const n=prog[cur].solved.length,m=TASKS[cur].length;
+  document.getElementById('st-n').textContent=`${n} / ${m} 已完成`;document.getElementById('st-bar').style.width=(n/m*100)+'%'}
+document.getElementById('mreset').onclick=()=>{if(cur==='home')return;
+  prog[cur]={solved:[],hints:{},ans:{}};store.set('sb_'+cur,prog[cur]);renderTasks(cur);labs[cur].reset();refresh()};
+
+function tok(s){const r=[];s.replace(/"([^"]*)"|'([^']*)'|(\S+)/g,(m,a,b,c)=>{r.push(a??b??c)});return r}
+const FLAG=b=>atob(b);
+
+function makeLab(n,cfg){
+  const T=document.getElementById('t'+n),I=document.getElementById('i'+n);
+  let S,hist=[],hi=0;
+  let out=(s,cls)=>{T.innerHTML+=(cls?`<span class="${cls}">${esc(s)}</span>`:esc(s))+'\n';T.scrollTop=1e9};
+  const ROOT='/opt/lab',DIR=ROOT+'/'+cfg.dir;
+  const reset=()=>{S={cwd:ROOT,user:cfg.users[0],files:JSON.parse(JSON.stringify(cfg.files)),pot:{}};T.innerHTML='';out(cfg.welcome,'g')};
+  const prompt=()=>`${S.user}@lab:${S.cwd}$ `;
+  const res=n=>{if(n.startsWith(DIR+'/'))return n.slice(DIR.length+1);if(S.cwd===ROOT&&n.startsWith(cfg.dir+'/'))return n.slice(cfg.dir.length+1);if(n.includes('/'))return null;return S.cwd===DIR?n:null};
+  const F=name=>{const k=res(name);return k==null?undefined:S.files[k]};
+  const can=(f,bit)=>(parseInt(f.mode[S.user===f.owner?0:2])&bit)!==0;
+  function read(name,cmd){const f=F(name);if(!f){out(`${cmd}: ${name}: No such file or directory`,'e');return null}
+    if(!can(f,4)){out(`${cmd}: ${name}: Permission denied`,'e');return null}return f.body}
+  function write(name,body,append){const k=res(name);if(k==null){out(`bash: ${name}: Permission denied (請先 cd 進入 ${cfg.dir})`,'e');return false}let f=S.files[k];
+    if(!f){f=S.files[k]={owner:S.user,mode:'644',body:''}}
+    else if(!can(f,2)){out(`bash: ${name}: Permission denied`,'e');return false}
+    f.body=append?f.body+body:body;return true}
+  const C={
+    help(){out('可用指令：pwd cd ls cat head tail wc grep cp diff sed echo chmod whoami id su clear reset '+(cfg.extra||''))},
+    clear(){T.innerHTML=''},
+    reset(){reset()},
+    whoami(){out(S.user)},
+    id(){const u=cfg.users.indexOf(S.user)+1001;out(`uid=${u}(${S.user}) gid=${u}(${S.user}) groups=${u}(${S.user})`)},
+    pwd(){out(S.cwd)},
+    cd(a){const t=a[0];if(!t||t==='~'||t===ROOT||t==='/opt/lab/'){S.cwd=ROOT;return}
+      if(t==='..'){S.cwd=S.cwd===DIR?ROOT:'/opt';if(S.cwd==='/opt')S.cwd=ROOT;return}
+      if(t===DIR||t===DIR+'/'||(S.cwd===ROOT&&(t===cfg.dir||t===cfg.dir+'/'))){S.cwd=DIR;return}
+      if(S.files[t]&&S.cwd===DIR){out(`cd: ${t}: Not a directory`,'e');return}
+      out(`cd: ${t}: No such file or directory`,'e')},
+    ls(a){const arg=a.find(x=>!x.startsWith('-'));const long=a.some(x=>x.startsWith('-')&&x.includes('l'));
+      const at=arg?(arg===cfg.dir||arg===DIR||arg===cfg.dir+'/'?DIR:arg==='.'?S.cwd:arg==='..'||arg===ROOT?ROOT:null):S.cwd;
+      if(at==null){out(`ls: cannot access '${arg}': No such file or directory`,'e');return}
+      if(at===ROOT){if(long){out('total 1');out(`drwxr-xr-x 2 root root  4096 Nov  8 10:00 ${cfg.dir}`)}else out(cfg.dir);return}
+      const names=Object.keys(S.files).sort();
+      if(!long){out(names.join('  '));return}
+      out('total '+names.length);
+      for(const k of names){const f=S.files[k];out(`-${[...f.mode].map(d=>rwx(+d)).join('')} 1 ${f.owner} ${f.owner} ${String(enc.encode(f.body).length).padStart(5)} Nov  8 10:00 ${k}`)}},
+    cat(a){if(!a.length){out('cat: 請指定檔名','e');return}for(const x of a){const b=read(x,'cat');if(b)out(b.replace(/\n$/,''))}},
+    head(a){let k=10,x=a[a.length-1];const i=a.indexOf('-n');if(i>=0)k=+a[i+1];const b=read(x,'head');if(b!=null)out(b.split('\n').slice(0,k).join('\n'))},
+    tail(a){let k=10,x=a[a.length-1];const i=a.indexOf('-n');if(i>=0)k=+a[i+1];const b=read(x,'tail');if(b!=null)out(b.replace(/\n$/,'').split('\n').slice(-k).join('\n'))},
+    wc(a){const x=a[a.length-1],b=read(x,'wc');if(b!=null)out(`${(b.match(/\n/g)||[]).length} ${x}`)},
+    grep(a){const [p,x]=a;const b=read(x,'grep');if(b!=null){const r=b.split('\n').filter(l=>l.includes(p));if(r.length)out(r.join('\n'))}},
+    cp(a){const b=read(a[0],'cp');if(b!=null)write(a[1],b)},
+    chmod(a){const [m,x]=a,f=F(x);
+      if(!/^[0-7]{3}$/.test(m||'')){out('chmod: 本環境請使用三位數字，例如 chmod 644 檔名','e');return}
+      if(!f){out(`chmod: cannot access '${x}': No such file or directory`,'e');return}
+      if(S.user!==f.owner){out(`chmod: changing permissions of '${x}': Operation not permitted`,'e');return}
+      f.mode=m},
+    su(a){if(!a[0]){out('su: 請指定使用者','e');return}if(cfg.users.includes(a[0]))S.user=a[0];else out(`su: user ${a[0]} does not exist`,'e')},
+    diff(a){const x=read(a[0],'diff'),y=read(a[1],'diff');if(x==null||y==null)return;
+      const A=x.replace(/\n$/,'').split('\n'),B=y.replace(/\n$/,'').split('\n');
+      for(let i=0;i<Math.max(A.length,B.length);i++)if(A[i]!==B[i]){out(`${i+1}c${i+1}`);if(A[i]!=null)out('< '+A[i],'e');out('---');if(B[i]!=null)out('> '+B[i],'p')}},
+    sed(a){if(a[0]!=='-i'||!a[1]||!a[2]){out("sed: 本環境支援 sed -i 's/舊/新/' 檔名",'e');return}
+      const p=a[1].split('/');if(p[0]!=='s'||p.length<3){out('sed: 格式錯誤','e');return}
+      const b=read(a[2],'sed');if(b==null)return;write(a[2],b.split(p[1]).join(p[2]))},
+    async sha256sum(a){
+      if(a[0]==='-c'){const b=read(a[1],'sha256sum');if(b==null)return 'x';let bad=0;
+        for(const l of b.split('\n').filter(Boolean)){const [h,name]=l.split(/\s+/);const f=F(name);
+          if(!f){out(`${name}: FAILED open or read`,'e');bad++;continue}
+          if(await sha(f.body)===h)out(`${name}: OK`,'p');else{out(`${name}: FAILED`,'e');bad++}}
+        if(bad)out(`sha256sum: WARNING: ${bad} computed checksum did NOT match`,'e');return bad?'fail':'ok'}
+      for(const x of a){const b=read(x,'sha256sum');if(b!=null)out(`${await sha(b)}  ${x}`)}},
+    ...(cfg.cmds||{})
+  };
+  const ctx={get S(){return S},F,read,write,out:(...x)=>out(...x)};
+  async function run(line){
+    T.innerHTML+=`<span class="p">${esc(prompt())}</span>${esc(line)}\n`;
+    if(!line.trim())return;
+    const before=JSON.stringify(S.files),who=S.user;let res;
+    let m=line.match(/^echo\s+(.*?)\s*(>>?)\s*(\S+)$/);
+    if(m){write(m[3],tok(m[1]).join(' ')+'\n',m[2]==='>>')}
+    else if(m=line.match(/^echo\s+(.*)$/)){out(tok(m[1]).join(' '))}
+    else{
+      let rd=null;m=line.match(/^(.*?)\s*(>>?)\s*(\S+)$/);if(m){rd=m;line=m[1]}
+      const [c,...a]=tok(line);
+      if(!C[c]){out(`${c}: command not found (輸入 help 查看可用指令)`,'e');return}
+      if(rd){const f=F(rd[3]);if(f&&!can(f,2)){out(`bash: ${rd[3]}: Permission denied`,'e');return}
+        let buf='';const save=out;out=s=>{buf+=s+'\n'};
+        try{res=await C[c](a,ctx)}finally{out=save}write(rd[3],buf,rd[2]==='>>')}
+      else res=await C[c](a,ctx)}
+    if(cfg.after)await cfg.after({line,before,who,res},ctx);
+    T.scrollTop=1e9}
+  I.onkeydown=async e=>{
+    if(e.key==='ArrowUp'){if(hi>0)I.value=hist[--hi];e.preventDefault();return}
+    if(e.key==='ArrowDown'){I.value=hi<hist.length-1?hist[++hi]:(hi=hist.length,'');return}
+    if(e.key!=='Enter')return;
+    const v=I.value;I.value='';if(v.trim()){hist.push(v);hi=hist.length}
+    I.disabled=true;try{await run(v)}finally{I.disabled=false;I.focus()}};
+  T.onclick=()=>I.focus();
+  reset();
+  return {reset};
+}
+
+const WL=['123456','password','Class2026!','Welcome2026!','student'];
+for(let i=1;i<=200;i++)WL.push('Practice'+i);
+const ST='student',OW='elaine_lab_owner',GU='elaine_lab_guest';
+const labs={};
+labs.pw=makeLab(1,{
+  dir:'passwords',users:[ST],extra:'mkhash john hashbench',
+  welcome:'MISSION 01 // PASSWORDS\n輸入 help 查看可用指令。',
+  files:{
+    'passwords.hash':{owner:ST,mode:'644',body:
+'demo01:7ba644de0306f9f2:1eee5ada10e50480a383ebcf1ed0fb3dbb7aa07ec989fa850365aab32f2209b2\n'+
+'demo02:667c3448ce7b8f66:4d901f6859ff3acd7087bcf06ef1df1efad09969c0f8126226b483e40c69453f\n'+
+'demo03:9e2b6bc622b26b2e:780a608d01514775ee50d52b401086a500308d24f386f8d30538eb60fc3c1f88\n'},
+    'wordlist.txt':{owner:ST,mode:'644',body:WL.join('\n')+'\n'},
+    'flag1.txt':{owner:ST,mode:'644',body:FLAG('RkxBR3t3ZWxjb21lX3RvX3RoZV90ZXJtaW5hbH0=')+'\n'}},
+  cmds:{
+    async mkhash(a,c){if(a.length<2){c.out('用法：mkhash <salt> <密碼>','e');return}const h=await sha(a[0]+a[1]);c.out(h);
+      const f=c.S.files['passwords.hash'];if(!f)return;const r=f.body.split('\n').map(l=>l.split(':')).find(x=>x[1]===a[0]);
+      if(r)c.out(h===r[2]?`[MATCH] 與 ${r[0]} 的雜湊相符，密碼就是 ${a[1]}`:`[NO MATCH] 與 ${r[0]} 的雜湊不符`,h===r[2]?'f':'e')},
+    async john(a,c){const S=c.S;
+      const show=a.includes('--show'),file=a.find(x=>!x.startsWith('-'));
+      if(!file){c.out('用法：john --wordlist=<字典> <雜湊檔>','e');return}
+      const b=c.read(file,'john');if(b==null)return;
+      const rows=b.split('\n').filter(Boolean).map(l=>l.split(':'));
+      if(show){let k=0;for(const [u] of rows)if(S.pot[u]){c.out(`${u}:${S.pot[u]}`);k++}
+        c.out(`\n${k} password hashes cracked, ${rows.length-k} left`);return}
+      const wa=a.find(x=>x.startsWith('--wordlist='));
+      if(!wa){c.out('john: 請用 --wordlist= 指定字典','e');return}
+      const w=c.read(wa.split('=')[1],'john');if(w==null)return;
+      const words=w.split('\n').filter(Boolean);
+      c.out(`Loaded ${rows.length} password hashes with ${rows.length} different salts (salted SHA-256)`);
+      const t0=performance.now();let g=0,tries=0;
+      for(const [u,s,h] of rows){if(S.pot[u]){g++;continue}
+        for(const x of words){tries++;if(await sha(s+x)===h){S.pot[u]=x;c.out(`${x.padEnd(18)}(${u})`,'p');g++;break}}}
+      c.out(`${g}g ${((performance.now()-t0)/1000).toFixed(2)}s ${tries} guesses DONE`);
+      c.out('Use the "--show" option to display all of the cracked passwords reliably','g')},
+    async hashbench(a,c){c.out('以 20 個候選密碼測試，PBKDF2 需要數秒...','g');
+      const ws=WL.slice(0,20),salt=enc.encode('classroom');
+      let t0=performance.now();for(const w of ws)await sha('classroom'+w);const x=performance.now()-t0;
+      t0=performance.now();for(const w of ws){const k=await crypto.subtle.importKey('raw',enc.encode(w),'PBKDF2',false,['deriveBits']);await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},k,256)}
+      const y=performance.now()-t0;
+      c.out(`SHA-256 (1 次)         ${x.toFixed(1).padStart(9)} ms`);
+      c.out(`PBKDF2 (100,000 次)    ${y.toFixed(1).padStart(9)} ms`);
+      c.out(`約慢 ${Math.round(y/Math.max(x,.1))} 倍。字典若有一億個詞，PBKDF2 版本單機約需 ${(y/20*1e8/86400000).toFixed(0)} 天。`,'g');
+      c.out(FLAG('RkxBR3tzbG93X2hhc2hfd2luc30='),'f')}
+  }
+});
+labs.perm=makeLab(2,{
+  dir:'permissions',users:[GU,OW],
+  welcome:'MISSION 02 // PERMISSIONS\n輸入 help 查看可用指令。',
+  files:{'grades.csv':{owner:OW,mode:'644',body:'student,score\nDemoStudent01,85\nDemoStudent02,92\n'}},
+  after({line,before,who},c){
+    const was=JSON.parse(before)['grades.csv'],now=c.S.files['grades.csv'];
+    if(who===GU&&was&&now&&now.body!==was.body)c.out('\n成績被 guest 竄改了。\n'+FLAG('RkxBR3t3b3JsZF93cml0YWJsZV9pc19iYWR9'),'f');
+    if(who===GU&&/^cat\s+\S*grades\.csv/.test(line)&&now&&!(parseInt(now.mode[2])&4)&&now.mode[1]==='0')c.out('\n其他人連讀都讀不到了。\n'+FLAG('RkxBR3tsZWFzdF9wcml2aWxlZ2V9'),'f');
+  }
+});
+const N1='Classroom notice\nDeadline: Friday 17:00\n';
+labs.int=makeLab(3,{
+  dir:'integrity',users:[ST],
+  welcome:'MISSION 03 // INTEGRITY\n輸入 help 查看可用指令。',
+  files:{
+    'notice.txt':{owner:ST,mode:'644',body:N1},
+    'notice_changed.txt':{owner:ST,mode:'644',body:'Classroom notice\nDeadline: Thursday 12:00\n'},
+    'SHA256SUMS':{owner:ST,mode:'644',body:'8517cfb21c5164a5d37f90b55ee57e750c0ca7d214ea0c2e2800268095d17802  notice.txt\n'}},
+  after({line,res},c){
+    const f=c.S.files['notice.txt'];
+    if(/^sha256sum\s+-c/.test(line)&&res==='ok'&&f&&f.body!==N1)c.out('\n公告被改了，驗證卻顯示 OK。清單本身也被換掉了。\n'+FLAG('RkxBR3twcm90ZWN0X3RoZV9jaGVja3N1bX0='),'f');
+  }
+});
+for(const k in TASKS)renderTasks(k);
+refresh();
+document.querySelectorAll('.rst').forEach(b=>b.onclick=()=>{
+  if(!b.classList.contains('arm')){b.classList.add('arm');b.textContent='確定嗎？所有作答與終端機紀錄都會清除，再按一次確認';setTimeout(()=>{b.classList.remove('arm');b.textContent='[R] 重置本任務，重新練習'},4000);return}
+  const k=b.dataset.r;prog[k]={solved:[],hints:{},ans:{}};store.set('sb_'+k,prog[k]);renderTasks(k);labs[k].reset();refresh();
+  b.classList.remove('arm');b.textContent='[R] 重置本任務，重新練習';window.scrollTo({top:0,behavior:'smooth'})});
+</script>
+</body>
+</html>
