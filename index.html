@@ -241,7 +241,7 @@ function makeLab(n,cfg){
     if(e.key!=='Enter')return;
     const v=I.value;I.value='';if(v.trim()){hist.push(v);hi=hist.length}
     I.disabled=true;try{await run(v)}finally{I.disabled=false;I.focus()}};
-  T.onclick=()=>I.focus();
+  T.onclick=()=>{if(!String(window.getSelection()))I.focus()};
   reset();
   return {reset};
 }
